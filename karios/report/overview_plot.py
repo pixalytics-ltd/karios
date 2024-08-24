@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Module to plot images, radial error and theta error"""
+from __future__ import annotations
+
 import logging
 
 import numpy as np
@@ -31,6 +33,7 @@ from core.image import GdalRasterImage
 from report.commons import AbstractPlot, add_logo
 
 logger = logging.getLogger()
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 
 def theta_deg(y: float, x: float):

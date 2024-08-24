@@ -17,6 +17,8 @@
 # limitations under the License.
 """circular error plot module"""
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np
@@ -216,15 +218,17 @@ class CircularErrorPlot(AbstractPlot):
         out_str_list.append(f"Total Pixels: {str(npixtotal)}")
         out_str_list.append(f"Nbr of bins : {str(len(hist))}")
 
-        # Normal Test :
-        k2, p = sp_stats.normaltest(hist)
-        alpha = 1e-3
-        if p < alpha:  # null hypothesis: hist comes from a normal distribution
-            # logger.info("The null hypothesis can be rejected, p value : %s", p)
-            out_str_list.append("Normal Test : rejected")
-        else:
-            # logger.info("The null hypothesis cannot be rejected, p value : %s", p)
-            out_str_list.append("Normal Test : not rejected")
+        if npixtotal > 8: # skewtest is not valid with less than 8 samples
+            
+            # Normal Test :
+            k2, p = sp_stats.normaltest(hist)
+            alpha = 1e-3
+            if p < alpha:  # null hypothesis: hist comes from a normal distribution
+                # logger.info("The null hypothesis can be rejected, p value : %s", p)
+                out_str_list.append("Normal Test : rejected")
+            else:
+                # logger.info("The null hypothesis cannot be rejected, p value : %s", p)
+                out_str_list.append("Normal Test : not rejected")
 
         logger.info("\n".join(out_str_list))
 
