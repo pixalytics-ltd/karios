@@ -217,8 +217,8 @@ class CircularErrorPlot(AbstractPlot):
         out_str_list = [self._stats.get_string_block(self._img_res, direction=direction)]
         out_str_list.append(f"Total Pixels: {str(npixtotal)}")
         out_str_list.append(f"Nbr of bins : {str(len(hist))}")
-
-        if npixtotal > 8: # skewtest is not valid with less than 8 samples
+        
+        if len(hist) > 7: # skewtest is not valid with less than 8 samples
             
             # Normal Test :
             k2, p = sp_stats.normaltest(hist)
@@ -229,7 +229,8 @@ class CircularErrorPlot(AbstractPlot):
             else:
                 # logger.info("The null hypothesis cannot be rejected, p value : %s", p)
                 out_str_list.append("Normal Test : not rejected")
-
+        else:
+            logger.info(" Skewtest is not valid with less than 8 samples, {} present".format(len(hist)))
         logger.info("\n".join(out_str_list))
 
         return (hist, bins)
