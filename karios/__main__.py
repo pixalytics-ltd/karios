@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2024 Telespazio France.
+# Copyright (c) 2025 Telespazio France.
 #
 # This file is part of KARIOS.
 # See https://github.com/telespazio-tim/karios for further info.
@@ -15,3 +15,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Main entry point for KARIOS CLI."""
+
+import sys
+from pathlib import Path
+
+# Add the parent directory to Python's path so it can find the karios package
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from karios.cli.commands import cli
+
+if __name__ == "__main__":
+    sys.exit(cli())

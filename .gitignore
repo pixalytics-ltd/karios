@@ -10,3 +10,7 @@ karios/results
 data
 results
 karios.log
+build
+karios.egg-info
+dist
+

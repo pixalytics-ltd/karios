@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2024 Telespazio France.
+# Copyright (c) 2025 Telespazio France.
 #
 # This file is part of KARIOS.
 # See https://github.com/telespazio-tim/karios for further info.
@@ -29,12 +29,12 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from scipy import stats as sp_stats
 from scipy.interpolate import interpn
 
-from accuracy_analysis.accuracy_statistics import GeometricStat
-from core.configuration import CEPlotConfiguration
-from core.image import GdalRasterImage
-from report.commons import AbstractPlot, add_logo
+from karios.accuracy_analysis.accuracy_statistics import GeometricStat
+from karios.core.configuration import CEPlotConfiguration
+from karios.core.image import GdalRasterImage
+from karios.report.commons import AbstractPlot
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def _rmse(mean, std, img_res=None):
@@ -63,7 +63,7 @@ class CircularErrorPlot(AbstractPlot):
         mon_image: GdalRasterImage,
         ref_image: GdalRasterImage,
         stats: GeometricStat,
-        img_res: int | None,
+        img_res: float | None,
         prefix: str | None,
     ):
         """Constructor
@@ -73,7 +73,7 @@ class CircularErrorPlot(AbstractPlot):
             mon_image (GdalRasterImage): image to match
             ref_image (GdalRasterImage): reference image
             stats (GeometricStat): statistics to plot
-            img_res (int | None): image resolution to apply to statistics as factor.
+            img_res (float | None): image resolution to apply to statistics as factor.
                 if None, consider pixel with value 1, otherwise, consider meter.
             prefix (str|None): figure title prefix
         """
@@ -114,13 +114,13 @@ class CircularErrorPlot(AbstractPlot):
     def _plot(self):
 
         grid = self._figure.add_gridspec(
-            4,
+            3,
             3,
             width_ratios=(4, 4, 4),
-            height_ratios=(0.5, 4, 4, 0.5),
+            height_ratios=(0.3, 3, 3),
             left=0.15,
             right=0.9,
-            bottom=0.02,
+            bottom=0.05,
             top=0.9,
             wspace=0.1,
             hspace=0.3,
@@ -133,7 +133,6 @@ class CircularErrorPlot(AbstractPlot):
         ax_row = self._figure.add_subplot(grid[2, 1], sharey=ax_scatter)
         ax_text = self._figure.add_subplot(grid[1, 1])
         ax_ce = self._figure.add_subplot(grid[1, 2])
-        logo_gd = grid[3, :].subgridspec(1, 3)
 
         # no labels
         ax_col.tick_params(axis="x", labelbottom=False)
@@ -147,14 +146,14 @@ class CircularErrorPlot(AbstractPlot):
 
         # ///////////////////////////////////////
         # plot col
-        self._hist_vector(ax_col, self._stats.v_y_th, "y")
+        self._hist_vector(ax_col, self._stats.v_x_th, "x")
 
         # ///////////////////////////////////////
         # plot row
         self._hist_vector(
             ax_row,
-            self._stats.v_x_th,
-            "x",
+            self._stats.v_y_th,
+            "y",
             orientation="horizontal",
         )
 
@@ -176,8 +175,6 @@ class CircularErrorPlot(AbstractPlot):
         )
 
         self._figure.colorbar(scatter_plot, cax=cax, ticklocation="left")
-
-        add_logo(self._figure, logo_gd)
 
     ####################################################
     # Local implementation
@@ -288,7 +285,7 @@ class CircularErrorPlot(AbstractPlot):
         x, y, z = x[idx], y[idx], z[idx]
 
         # PLOT scatter
-        scatter = axes.scatter(y, x, c=z, cmap=self._conf.ce_scatter_colormap)
+        scatter = axes.scatter(x, y, c=z, cmap=self._conf.ce_scatter_colormap)
 
         # Plot in the graphic Cicrular error circle :
         u = range(0, 110, 1)
@@ -396,18 +393,18 @@ class CircularErrorPlot(AbstractPlot):
             f"Percentage of Confident Pixels : {self._stats.percentage_of_pixel:.2f}%",
             "",
             f"{self._x_scatter_label}:",
-            f"\tMin : {self._stats.min_y*self._img_res:.2f} {self._short_unit}",
-            f"\tMax : {self._stats.max_y*self._img_res:.2f} {self._short_unit}",
-            f"\tMean : {self._stats.mean_y*self._img_res:.2f} {self._short_unit}",
-            f"\tSigma : {self._stats.std_y*self._img_res:.2f} {self._short_unit}",
-            f"\tRMSE : {y_rmse:.2f} {self._short_unit}",
-            "",
-            f"{self._y_scatter_label}:",
             f"\tMin : {self._stats.min_x*self._img_res:.2f} {self._short_unit}",
             f"\tMax : {self._stats.max_x*self._img_res:.2f} {self._short_unit}",
             f"\tMean : {self._stats.mean_x*self._img_res:.2f} {self._short_unit}",
             f"\tSigma : {self._stats.std_x*self._img_res:.2f} {self._short_unit}",
             f"\tRMSE : {x_rmse:.2f} {self._short_unit}",
+            "",
+            f"{self._y_scatter_label}:",
+            f"\tMin : {self._stats.min_y*self._img_res:.2f} {self._short_unit}",
+            f"\tMax : {self._stats.max_y*self._img_res:.2f} {self._short_unit}",
+            f"\tMean : {self._stats.mean_y*self._img_res:.2f} {self._short_unit}",
+            f"\tSigma : {self._stats.std_y*self._img_res:.2f} {self._short_unit}",
+            f"\tRMSE : {y_rmse:.2f} {self._short_unit}",
             "",
             f"Global RMSE : {_rmse(x_rmse, y_rmse):.2f} {self._short_unit}",
             f"CE @90 the percentile : {self._stats.compute_percentile(0.9, self._img_res):.2f} {self._short_unit}",

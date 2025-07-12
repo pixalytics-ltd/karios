@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2024 Telespazio France.
+# Copyright (c) 2025 Telespazio France.
 #
 # This file is part of KARIOS.
 # See https://github.com/telespazio-tim/karios for further info.
@@ -19,66 +19,20 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib import colors
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from numpy.typing import NDArray
-from pandas import DataFrame, Series
+from pandas import DataFrame
 
-from core.configuration import ShiftPlotConfiguration
-from core.image import GdalRasterImage
-from report.commons import AbstractPlot, add_logo
-
-
-@dataclass
-class MeanProfile:
-    groups_positions: NDArray
-    mean_values: Series
-    nb_pos: Series
-    values_std: Series
+from karios.core.configuration import ShiftPlotConfiguration
+from karios.core.image import GdalRasterImage
+from karios.report.commons import AbstractPlot, mean_profile
 
 
-def _mean_profile(values: Series, positions: Series, bin_size: int = 20) -> MeanProfile:
-    """Compute mean and std values for each columns or rows.
-    Possible to do stack several lines or columns (see bin_size) in order
-    to increase number of points that is taken into account
-
-    Args:
-        values (Series): values
-        positions (Series): values position on one axis, for example, X coordinates of the values
-        bin_size (int, optional): bin size to group values by position group. Defaults to 20.
-
-    Returns:
-        MeanProfile: computed mean profiles
-    """
-    position_group = np.floor_divide(positions, bin_size)
-    dic = {"val": values, "po": position_group}
-    df = DataFrame.from_dict(dic)
-    group = df.groupby("po")
-    groups_positions = np.uint16(group["po"].mean() * bin_size + bin_size / 2)
-    nb_pos = group["val"].count()
-    mean_values = group["val"].mean()
-    values_std = group["val"].std()
-    return MeanProfile(groups_positions, mean_values, nb_pos, values_std)
-
-
-def _compute_std_min_max(profile: MeanProfile):
-    y_err = profile.values_std * np.sqrt(
-        1 / len(profile.groups_positions)
-        + (profile.groups_positions - profile.groups_positions.mean()) ** 2
-        / np.sum((profile.groups_positions - profile.groups_positions.mean()) ** 2)
-    )
-    std_min = profile.mean_values - y_err
-    std_max = profile.mean_values + y_err
-    return (std_min, std_max)
-
-
-class RowColShiftPlot(AbstractPlot):
+class MeanShiftByRowColGroupPlot(AbstractPlot):
     # pylint: disable=too-few-public-methods
     """Class to row/col shift plot image"""
 
@@ -130,13 +84,13 @@ class RowColShiftPlot(AbstractPlot):
         # Add a gridspec with two rows and two columns and a ratio of 1 to 4 between
         # the size of the marginal axes and the main axes in both directions.
         grid = self._figure.add_gridspec(
-            4,
+            3,
             2,
             width_ratios=(4, 1),
-            height_ratios=(0.5, 1, 4, 0.25),
+            height_ratios=(0.3, 1, 4),
             left=0.15,
             right=0.95,
-            bottom=0.01,
+            bottom=0.05,
             top=0.95,
             wspace=0.1,
             hspace=0.2,
@@ -147,8 +101,6 @@ class RowColShiftPlot(AbstractPlot):
         ax_scatter = self._figure.add_subplot(grid[2, 0])
         ax_col = self._figure.add_subplot(grid[1, 0], sharex=ax_scatter)
         ax_row = self._figure.add_subplot(grid[2, 1], sharey=ax_scatter)
-
-        logo_gd = grid[3, :].subgridspec(1, 3)
 
         ax_header.axis("off")
         text = f"Monitored : {self._mon_img.file_name}\nReference : {self._ref_img.file_name}".expandtabs()
@@ -182,8 +134,6 @@ class RowColShiftPlot(AbstractPlot):
         )
 
         self._figure.colorbar(scatter, cax=cax, ticklocation="left")
-
-        add_logo(self._figure, logo_gd)
 
     ####################################################
     # Local implementation
@@ -235,7 +185,7 @@ class RowColShiftPlot(AbstractPlot):
         """
         dim = self._direction
         # compute stats
-        profile = _mean_profile(
+        profile = mean_profile(
             self._points[dim], self._points["x0"], self._config.histo_mean_bin_size
         )
 
@@ -268,7 +218,7 @@ class RowColShiftPlot(AbstractPlot):
         ax_col_mean.plot(profile.groups_positions, profile.mean_values, label=f"Mean {dim} by col")
 
         # PLOT "dim" STD by filling on X
-        std_min, std_max = _compute_std_min_max(profile)
+        std_min, std_max = profile.compute_std_min_max()
         ax_col_mean.fill_between(profile.groups_positions, std_min, std_max, alpha=0.3, label="std")
 
         # show legend of main Y axis
@@ -287,7 +237,7 @@ class RowColShiftPlot(AbstractPlot):
         """
         dim = self._direction
         # Compute stats
-        profile = _mean_profile(
+        profile = mean_profile(
             self._points[dim], self._points["y0"], self._config.histo_mean_bin_size
         )
 
@@ -322,7 +272,7 @@ class RowColShiftPlot(AbstractPlot):
         ax_row_mean.plot(profile.mean_values, profile.groups_positions, label=f"Mean {dim} by row")
 
         # PLOT "dim" STD by filling on Y
-        std_min, std_max = _compute_std_min_max(profile)
+        std_min, std_max = profile.compute_std_min_max()
         # NOTE x at the end of fill_between
         ax_row_mean.fill_betweenx(
             profile.groups_positions, std_min, std_max, alpha=0.3, label="std"
