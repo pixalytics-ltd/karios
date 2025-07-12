@@ -5,3 +5,8 @@ results/
 .coverage
 coverage.xml
 junit.xml
+karios/data
+karios/results
+data
+results
+karios.log

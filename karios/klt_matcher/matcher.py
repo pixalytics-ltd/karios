@@ -234,19 +234,31 @@ class KLT:
             mask_box = mask.read(1, x_off, y_off, x_size, y_size)
         else:
             mask_box = (img_box != 0) & (ref_box != 0) & np.isfinite(ref_box) & np.isfinite(img_box)
-            mask_box = mask_box.astype(np.uint8)
+        mask_box = mask_box.astype(np.uint8)
 
         # check mask
         valid_pixels = len(mask_box[mask_box > 0])
         if valid_pixels == 0:
-            logger.info("-- No valid pixels, skipping this tile")
+            logger.info("-- No valid pixels for mask, skipping this tile")
             return None
 
-        logger.info("Nb valid pixels: %s/%s", valid_pixels, x_size * y_size)
+        logger.info("Nb valid pixels for masked area: %s/%s", valid_pixels, x_size * y_size)
 
         # laplacian
         img_box = cv2.Laplacian(img_box, cv2.CV_8U, ksize=self._conf.laplacian_kernel_size)
         ref_box = cv2.Laplacian(ref_box, cv2.CV_8U, ksize=self._conf.laplacian_kernel_size)
+
+        # check image for valid data
+        valid_pixels = len(img_box[img_box > 0])
+        if valid_pixels == 0:
+            logger.info("-- No valid pixels for image, skipping this tile")
+            return None
+
+        # check reference for valid data
+        valid_pixels = len(ref_box[ref_box > 0])
+        if valid_pixels == 0:
+            logger.info("-- No valid pixels for reference, skipping this tile")
+            return None
 
         if self._gen_laplacian:
             io.imsave(

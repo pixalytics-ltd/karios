@@ -3,13 +3,13 @@
         "input_products": "testing",
         "cloud_mask": null,
         "klt_matching":{
-            "minDistance": 10,
+            "minDistance": 1,
             "blocksize": 15,
-            "maxCorners": 20000,
-            "matching_winsize": 25,
+            "maxCorners": 200000,
+            "matching_winsize": 31,
             "qualityLevel": 0.1,
             "xStart": 0,
-            "tile_size": 20000,
+            "tile_size": 800,
             "laplacian_kernel_size" : 5,
             "outliers_filtering": false
         },
