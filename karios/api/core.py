@@ -22,6 +22,7 @@ Provides the main entry point for the KARIOS API functionality.
 
 from __future__ import annotations
 
+import os
 import logging
 import math
 from dataclasses import dataclass
@@ -698,7 +699,7 @@ class KariosAPI:
             match_result.points,
             self._runtime_configuration.title_prefix,
         )
-        overview_path = output_dir / "01_overview.png"
+        overview_path = os.path.join(output_dir, "01_overview.png")
         overview_plot.plot(overview_path)
         return overview_path
 
@@ -720,7 +721,7 @@ class KariosAPI:
             "dx",
             self._runtime_configuration.title_prefix,
         )
-        dx_path = output_dir / "02_dx.png"
+        dx_path = os.path.join(output_dir, "02_dx.png")
         dx_plot.plot(dx_path)
         return dx_path
 
@@ -742,7 +743,7 @@ class KariosAPI:
             "dy",
             self._runtime_configuration.title_prefix,
         )
-        dy_path = output_dir / "03_dy.png"
+        dy_path =  os.path.join(output_dir, "03_dy.png")
         dy_plot.plot(dy_path)
         return dy_path
 
@@ -762,7 +763,7 @@ class KariosAPI:
         Returns:
             Path to the generated plot
         """
-        ce_path = output_dir / "04_ce.png"
+        ce_path =  os.path.join(output_dir, "04_ce.png")
 
         monitored_image_resolution = get_image_resolution(
             match_result.monitored_image,
@@ -835,7 +836,7 @@ class KariosAPI:
                 mini,
                 maxi,
             )
-            poster_path = output_dir / f"dem_{dimension.replace(' ', '_')}.png"
+            poster_path =  os.path.join(output_dir, f"dem_{dimension.replace(' ', '_')}.png")
             report.plot(poster_path)
             dem_paths.append(str(poster_path))
 
